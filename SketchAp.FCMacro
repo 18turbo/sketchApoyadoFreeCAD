@@ -1,0 +1,86 @@
+# -*- coding: utf-8 -*-
+# (c) 18Turbo, 2022
+
+__Name__ = 'SketchApoyado'
+__Comment__ = 'Create an INDEPENDENT sketch supported by a face'
+__Author__ = '18Turbo'
+__Version__ = '0.0.1'
+__Date__ = '2022-09-14'
+__License__ = 'LGPL-2.0-or-later'
+__Web__ = 'https://github.com/18turbo/sketchApoyadoFreeCAD'
+__Wiki__ = 'https://github.com/18turbo/sketchApoyadoFreeCAD'
+__Icon__ = 'https://github.com/18turbo/sketchApoyadoFreeCAD/blob/main/sketchAp/icons/sketchApoyado.svg'
+__Help__ = ''
+__Status__ = 'beta'
+__Requires__ = 'FreeCAD >= v0.20'
+__Contact__ = 'https://github.com/18turbo'
+__Communication__ = ''
+__Files__ = 'sketchAp/icons/sketchApoyado.svg,sketchAp/icons/sketchApoyadoActualizar.svg'
+__Files__ += 'SketchAp.FCMacro,SketchApUpdate.FCMacro'
+
+
+# (En español:)
+# Funcionalidad:    Crea un sketch apoyado en una cara, sin dependencia
+#
+# Nota importante: Basado en el script de *** Sebastián Ernesto García ***
+#
+# Agradecimientos: Sebastián Ernesto García
+
+
+import FreeCAD as App
+import FreeCADGui as Gui
+
+from numpy import array, eye, pi
+sel = Gui.Selection.getSelectionEx()
+
+if len(sel) == 1:
+    subobjs = sel[0].SubObjects
+    if len(subobjs) == 1:
+        face = subobjs[0]
+        if face.ShapeType == 'Face':
+
+            datumPlane = FreeCAD.ActiveDocument.addObject("Part::Plane","RefPlane")
+            normalDatum = face.normalAt(0,0)
+            if normalDatum.z < 0:
+                normalXY = App.Vector(0, 0, -1)
+            else:
+                normalXY = App.Vector(0, 0, 1)
+            v = normalXY.cross(normalDatum)
+            epsilon = 0.0000000001
+            if v.Length > epsilon:
+                c = normalXY.dot(normalDatum)
+                s = v.normalize()
+                vx = array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
+                R = eye(3) + vx + vx.dot(vx) * ((1 - c) / (s.dot(s)))
+                rotation = App.Rotation(*R.reshape(9))
+
+            datumPlane.Placement = App.Placement(App.Vector(face.BoundBox.XMin, face.BoundBox.YMin, face.BoundBox.ZMin), App.Rotation(rotation.Axis, rotation.Angle * 180 / pi))
+            datumPlane.Support = ''          
+            datumPlane.recompute()
+
+#          Selecciono el Plano de Referencia
+            Gui.Selection.clearSelection()
+            Gui.Selection.addSelection(datumPlane)
+  
+#           Creo el Boceto        
+            sketch = FreeCAD.ActiveDocument.addObject('Sketcher::SketchObject','Sketch')
+            sketch.Support = (datumPlane,'')
+            sketch.MapMode = 'FlatFace'
+
+#		   Muestra los objetos activos dependientes
+            FreeCADGui.ActiveDocument.activeObject().HideDependent = False
+#            FreeCADGui.ActiveDocument.activeObject().ShowSupport = True
+            App.ActiveDocument.recompute()
+
+#           Editar Boceto
+            Gui.Selection.addSelection(sketch)
+            Gui.ActiveDocument.setEdit(sketch,0)
+            App.ActiveDocument.recompute()
+            datumPlane.Visibility = False
+
+        else:
+            App.Console.PrintWarning("Debes seleccionar una sola cara \n")
+    else:
+        App.Console.PrintWarning("Debes seleccionar una sola cara \n")
+else:
+    App.Console.PrintWarning("Debes seleccionar una sola cara \n")
