@@ -1,8 +1,8 @@
 # sketchApoyadoFreeCAD
 
-Create an INDEPENDENT sketch supported by a face
+Create an INDEPENDENT sketch (not Part Design) supported by a face
 
-Crea un sketch apoyado en una cara pero sin depender de ella.
+Crea un sketch (sin ser de Part Design) apoyado en una cara pero sin depender de ella.
 
 
 ## Agradecimientos
