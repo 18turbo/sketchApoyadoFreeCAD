@@ -4,7 +4,7 @@
 __Name__ = 'SketchApoyado'
 __Comment__ = 'Create an INDEPENDENT sketch supported by a face'
 __Author__ = '18Turbo'
-__Version__ = '0.0.1'
+__Version__ = '0.0.2'
 __Date__ = '2022-09-14'
 __License__ = 'LGPL-2.0-or-later'
 __Web__ = 'https://github.com/18turbo/sketchApoyadoFreeCAD'
@@ -53,9 +53,13 @@ if len(sel) == 1:
                 vx = array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
                 R = eye(3) + vx + vx.dot(vx) * ((1 - c) / (s.dot(s)))
                 rotation = App.Rotation(*R.reshape(9))
-
-            datumPlane.Placement = App.Placement(App.Vector(face.BoundBox.XMin, face.BoundBox.YMin, face.BoundBox.ZMin), App.Rotation(rotation.Axis, rotation.Angle * 180 / pi))
-            datumPlane.Support = ''          
+                datumPlane.Placement = App.Placement(App.Vector(face.BoundBox.XMin, face.BoundBox.YMin, face.BoundBox.ZMin), 
+                                            App.Rotation(rotation.Axis, rotation.Angle * 180 / pi))
+            else:
+                datumPlane.Placement = App.Placement(App.Vector(face.BoundBox.XMin, face.BoundBox.YMin, face.BoundBox.ZMin),
+                                            App.Rotation(App.Vector(0,0,0), 0))
+            datumPlane.Support = ''   
+            #datumPlane.Transparency = 50       
             datumPlane.recompute()
 
 #          Selecciono el Plano de Referencia
